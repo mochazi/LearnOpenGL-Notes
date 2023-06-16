@@ -1,4 +1,4 @@
-set(EXECUTABLE_NAME example-02)
+set(EXECUTABLE_NAME example_02_hello_triangle)
 
 file(GLOB SOURCE_FILES *.cpp)
 file(GLOB INCLUDE_FILES *.hpp)

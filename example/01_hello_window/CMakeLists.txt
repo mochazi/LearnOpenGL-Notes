@@ -1,4 +1,4 @@
-set(EXECUTABLE_NAME example-01)
+set(EXECUTABLE_NAME example_01_hello_window)
 
 file(GLOB SOURCE_FILES *.cpp)
 file(GLOB INCLUDE_FILES *.hpp)
