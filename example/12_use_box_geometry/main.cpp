@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // glEnable(GL_DEPTH_TEST);
-    // glDepthFunc(GL_LESS);
+     glEnable(GL_DEPTH_TEST);
+     glDepthFunc(GL_LESS);
 
     // 注册窗口变化监听
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
         // 渲染指令
         // ...
         glClearColor(25.0 / 255.0, 25.0 / 255.0, 25.0 / 255.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ourShader.use();
 
@@ -120,9 +120,9 @@ int main(int argc, char *argv[])
 
         glBindVertexArray(boxGeometry.VAO);
 
-//        glDrawElements(GL_TRIANGLES, boxGeometry.indices.size(), GL_UNSIGNED_INT, 0);
-        glDrawElements(GL_POINTS, boxGeometry.indices.size(), GL_UNSIGNED_INT, 0);
-        glDrawElements(GL_LINE_LOOP, boxGeometry.indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, boxGeometry.indices.size(), GL_UNSIGNED_INT, 0);
+//        glDrawElements(GL_POINTS, boxGeometry.indices.size(), GL_UNSIGNED_INT, 0);
+//        glDrawElements(GL_LINE_LOOP, boxGeometry.indices.size(), GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
