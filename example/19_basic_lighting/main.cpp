@@ -1,4 +1,4 @@
-#include "17_use_camera_class.hpp"
+#include "19_basic_lighting.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <tool/stb_image.h>
@@ -7,7 +7,7 @@ int SCREEN_WIDTH = 800;
 int SCREEN_HEIGHT = 600;
 
 // camera value
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 // delta time
 float deltaTime = 0.0f;
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // 创建窗口对象
+    // 窗口对象
     GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
@@ -69,13 +69,13 @@ int main(int argc, char *argv[])
     // 2.鼠标事件
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetMouseButtonCallback(window, mouse_button_calback);
-    glfwSetScrollCallback(window, scroll_callback);
 
     Shader ourShader("../shader/vertex.glsl", "../shader/fragment.glsl");
+    Shader lightObjectShader("../shader/light_object_vert.glsl", "../shader/light_object_frag.glsl");
 
     PlaneGeometry planeGeometry(1.0, 1.0, 1.0, 1.0);
     BoxGeometry boxGeometry(1.0, 1.0, 1.0);
-    SphereGeometry sphereGeometry(0.5, 20.0, 20.0);
+    SphereGeometry sphereGeometry(0.1, 10.0, 10.0);
 
     // 生成纹理
     unsigned int texture1, texture2;
@@ -140,6 +140,12 @@ int main(int argc, char *argv[])
     glm::vec3 view_translate = glm::vec3(0.0, 0.0, -5.0);
     ImVec4 clear_color = ImVec4(25.0 / 255.0, 25.0 / 255.0, 25.0 / 255.0, 1.0);
 
+    // 光照信息
+
+    glm::vec3 lightPosition = glm::vec3(1.0, 1.5, 0.0); // 光照位置
+    ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    ourShader.setFloat("ambientStrength", 0.1);
+
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
@@ -147,6 +153,12 @@ int main(int argc, char *argv[])
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastTime;
         lastTime = currentFrame;
+
+        // 在标题中显示帧率信息
+        std::string FPS = std::to_string(ImGui::GetIO().Framerate);
+        std::string ms = std::to_string(1000.0f / ImGui::GetIO().Framerate);
+        std::string newTitle = "LearnOpenGL - " + ms + " ms/frame " + FPS;
+        glfwSetWindowTitle(window, newTitle.c_str());
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -180,17 +192,35 @@ int main(int argc, char *argv[])
         glm::mat4 projection = glm::mat4(1.0f);
         projection = glm::perspective(glm::radians(fov), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
         glm::mat4 model = glm::mat4(1.0f);
-        // model = glm::eulerAngleZ(glfwGetTime()) * glm::eulerAngleY(glfwGetTime()) * glm::eulerAngleX(glfwGetTime());
 
-        glm::qua<float> qu = glm::qua<float>(glm::vec3(glfwGetTime(), glfwGetTime(), glfwGetTime()));
+        float rotate = glfwGetTime() * 0.2f;
+
+        glm::qua<float> qu = glm::qua<float>(glm::vec3(rotate, rotate, rotate));
         model = glm::mat4_cast(qu);
+
+        glm::vec3 lightPos = glm::vec3(lightPosition.x * glm::sin(glfwGetTime()), lightPosition.y, lightPosition.z);
 
         ourShader.setMat4("view", view);
         ourShader.setMat4("projection", projection);
 
         ourShader.setMat4("model", model);
+
+        ourShader.setVec3("lightPos", lightPos);
+        ourShader.setVec3("viewPos", camera.Position);
         glBindVertexArray(boxGeometry.VAO);
         glDrawElements(GL_TRIANGLES, boxGeometry.indices.size(), GL_UNSIGNED_INT, 0);
+
+        // 绘制灯光物体
+        lightObjectShader.use();
+        model = glm::mat4(1.0f);
+
+        model = glm::translate(model, lightPos);
+
+        lightObjectShader.setMat4("model", model);
+        lightObjectShader.setMat4("view", view);
+        lightObjectShader.setMat4("projection", projection);
+        glBindVertexArray(sphereGeometry.VAO);
+        glDrawElements(GL_TRIANGLES, sphereGeometry.indices.size(), GL_UNSIGNED_INT, 0);
 
         // 渲染 gui
         ImGui::Render();
