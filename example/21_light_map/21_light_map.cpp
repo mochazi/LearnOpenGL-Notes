@@ -38,6 +38,12 @@ void processInput(GLFWwindow *window)
 // 鼠标移动监听
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+
+    lastX = xpos;
+    lastY = ypos;
+
     // cout << "xpos " << xpos << endl;
     // cout << "ypos " << ypos << endl;
 }

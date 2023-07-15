@@ -10,6 +10,9 @@ Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 float deltaTime = 0.0f;
 float lastTime = 0.0f;
 
+float lastX = SCREEN_WIDTH / 2.0f; // 鼠标上一帧的位置
+float lastY = SCREEN_HEIGHT / 2.0f;
+
 int main(int argc, char *argv[])
 {
     glfwInit();

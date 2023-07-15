@@ -17,10 +17,13 @@ extern int SCREEN_HEIGHT;
 // camera value
 extern Camera camera;
 
-
 // delta time
 extern float deltaTime;
 extern float lastTime;
+
+// 鼠标上一帧的位置
+extern float lastX;
+extern float lastY;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
