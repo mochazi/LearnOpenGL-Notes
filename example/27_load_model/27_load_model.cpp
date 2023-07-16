@@ -43,6 +43,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 
     // cout << "xpos " << xpos << endl;
     // cout << "ypos " << ypos << endl;
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 void mouse_button_calback(GLFWwindow *window, int button, int action, int mods)
 {

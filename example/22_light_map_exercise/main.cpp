@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     // 2.鼠标事件
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     Shader ourShader("../shader/vertex.glsl", "../shader/fragment.glsl");
     Shader lightObjectShader("../shader/light_object_vert.glsl", "../shader/light_object_frag.glsl");
