@@ -1,0 +1,178 @@
+#include "34_env_mapping.hpp"
+
+int SCREEN_WIDTH = 800;
+int SCREEN_HEIGHT = 600;
+
+// camera value
+Camera camera(glm::vec3(0.0f, 2.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+// delta time
+float deltaTime = 0.0f;
+float lastTime = 0.0f;
+
+float lastX = SCREEN_WIDTH / 2.0f; // 鼠标上一帧的位置
+float lastY = SCREEN_HEIGHT / 2.0f;
+
+int main(int argc, char *argv[])
+{
+    glfwInit();
+    // 设置主要和次要版本
+    const char *glsl_version = "#version 330";
+
+    // 片段着色器将作用域每一个采样点（采用4倍抗锯齿，则每个像素有4个片段（四个采样点））
+    // glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    // 窗口对象
+    GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL", NULL, NULL);
+    if (window == NULL)
+    {
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+
+    // -----------------------
+    // 创建imgui上下文
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    // 设置样式
+    ImGui::StyleColorsDark();
+    // 设置平台和渲染器
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // -----------------------
+
+    // 设置视口
+    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    // 深度测试
+    glEnable(GL_DEPTH_TEST);
+
+    // 鼠标键盘事件
+    // 1.注册窗口变化监听
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // 2.鼠标事件
+    glfwSetCursorPosCallback(window, mouse_callback);
+    // 3.将鼠标隐藏
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    Shader skyboxShader("../shader/cube_map_vert.glsl", "../shader/cube_map_frag.glsl");
+    Shader reflectShader("../shader/reflect_object_vert.glsl", "../shader/reflect_object_frag.glsl");
+    Shader refractShader("../shader/refract_object_vert.glsl", "../shader/refract_object_frag.glsl");
+
+    SphereGeometry sphereGeometry(1.0, 50.0, 50.0); // 圆球
+    BoxGeometry skyboxGeometry(1.0, 1.0, 1.0);      // 天空盒
+    BoxGeometry containerGeometry(1.0, 1.0, 1.0);   // 箱子
+    PlaneGeometry groundGeometry(10.0, 10.0);       // 地面
+
+    float fov = 45.0f; // 视锥体的角度
+    glm::vec3 view_translate = glm::vec3(0.0, 0.0, -5.0);
+    ImVec4 clear_color = ImVec4(25.0 / 255.0, 25.0 / 255.0, 25.0 / 255.0, 1.0); // 25, 25, 25
+
+    // 天空盒贴图
+    vector<string> faces{
+            "../images/texture/Park3Med/px.jpg",
+            "../images/texture/Park3Med/nx.jpg",
+            "../images/texture/Park3Med/py.jpg",
+            "../images/texture/Park3Med/ny.jpg",
+            "../images/texture/Park3Med/pz.jpg",
+            "../images/texture/Park3Med/nz.jpg"};
+
+    unsigned int cubemapTexture = loadCubemap(faces);
+
+    Model ourModel("../images/model/walt/WaltHead.obj");
+
+    while (!glfwWindowShouldClose(window))
+    {
+        processInput(window);
+
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastTime;
+        lastTime = currentFrame;
+
+        // 在标题中显示帧率信息
+        // *************************************************************************
+        int fps_value = (int)round(ImGui::GetIO().Framerate);
+        int ms_value = (int)round(1000.0f / ImGui::GetIO().Framerate);
+
+        std::string FPS = std::to_string(fps_value);
+        std::string ms = std::to_string(ms_value);
+        std::string newTitle = "LearnOpenGL - " + ms + " ms/frame " + FPS;
+        glfwSetWindowTitle(window, newTitle.c_str());
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        // *************************************************************************
+
+        // 渲染指令
+        // ...
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // 绘制天空盒
+        drawSkyBox(skyboxShader, skyboxGeometry, cubemapTexture);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0, 0.0, 0.0));
+        model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+
+        refractShader.use();
+        refractShader.setMat4("model", model);
+        refractShader.setMat4("view", view);
+        refractShader.setMat4("projection", projection);
+        refractShader.setVec3("cameraPos", camera.Position);
+        refractShader.setVec3("objectColor", glm::vec3(0.0, 0.0, 0.0));
+
+        ourModel.Draw(refractShader);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-3.0, 0.0, 0.0));
+        model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
+
+        refractShader.setMat4("model", model);
+
+        refractShader.setVec3("objectColor", glm::vec3(0.1, 0.0, 0.1));
+        ourModel.Draw(refractShader);
+
+        reflectShader.use();
+        reflectShader.setMat4("view", view);
+        reflectShader.setMat4("projection", projection);
+        reflectShader.setVec3("cameraPos", camera.Position);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(3.0, 0.0, 0.0));
+        model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
+        reflectShader.setMat4("model", model);
+        reflectShader.setVec3("objectColor", glm::vec3(0.1, 0.1, 0.0));
+        ourModel.Draw(reflectShader);
+
+        // 渲染 gui
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    containerGeometry.dispose();
+    sphereGeometry.dispose();
+    skyboxGeometry.dispose();
+    glfwTerminate();
+
+    return 0;
+}
