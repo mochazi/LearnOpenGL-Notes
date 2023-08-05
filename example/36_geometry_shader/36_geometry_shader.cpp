@@ -27,7 +27,6 @@ void drawSkyBox(Shader shader, BoxGeometry geometry, unsigned int cubeMap)
 }
 
 // 加载立方体贴图
-
 unsigned int loadCubemap(vector<std::string> faces)
 {
     unsigned int textureID;
