@@ -2,6 +2,12 @@
 ## 参考视频
 [LearnOpenGL文档学习【完结】](https://www.bilibili.com/video/BV11Z4y1c7so)
 
+## 参考仓库
+
+[start-learning-opengl](https://github.com/yocover/start-learning-opengl)
+
+[LearnOpenGL](https://github.com/JoeyDeVries/LearnOpenGL)
+
 ## 编译环境
 - [**请自行安装msys2的msys64-mingw64**](https://packages.msys2.org/package)
 - **低版本环境没测试，估计没问题**
